@@ -1,0 +1,20 @@
+package: github.com/projectcalico/pilot-webhook
+import:
+- package: github.com/docopt/docopt-go
+  version: ~0.6.2
+- package: github.com/emicklei/go-restful
+  version: ~2.6.0
+- package: istio.io/istio
+  version: unmarshal-networkfilter
+  repo: git@github.com:spikecurtis/istio.git
+  subpackages:
+  - pilot/pkg/proxy/envoy
+- package: istio.io/api
+  repo: git@github.com:istio/api.git
+  version: 24209c4d7c9713900ac7571dfc38dd2eeea3f167
+- package: github.com/sirupsen/logrus
+  version: ~1.0.4
+- package: github.com/onsi/gomega
+  version: ^1.1.0
+- package: github.com/spf13/pflag
+  version: master

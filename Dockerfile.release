@@ -1,0 +1,4 @@
+FROM scratch
+
+ADD pilot-webhook /
+CMD ["/pilot-webhook"]

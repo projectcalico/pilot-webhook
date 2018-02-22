@@ -1,0 +1,4 @@
+FROM ubuntu
+
+ADD pilot-webhook /
+CMD ["/pilot-webhook"]
