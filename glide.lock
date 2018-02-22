@@ -1,5 +1,5 @@
 hash: b2deb2cc2f74c78c928a8e58271575eb9d82db26efcc01c71c0a79694616f6c6
-updated: 2018-02-21T12:38:25.892427719-08:00
+updated: 2018-02-22T12:17:49.418774541-08:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -14,7 +14,7 @@ imports:
 - name: github.com/ghodss/yaml
   version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
 - name: github.com/gogo/protobuf
-  version: 342cbe0a04158f6dcb03ca0079991a51a4248c02
+  version: f8f204fd5c977eb54d5a09f3bee74be9a169af67
   subpackages:
   - gogoproto
   - jsonpb
@@ -23,15 +23,16 @@ imports:
   - sortkeys
   - types
 - name: github.com/golang/glog
-  version: 44145f04b68cf362d9c4df2182967c2275eaefed
+  version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/protobuf
-  version: 4bd1920723d7b7c925de087aa32e2187708897f7
+  version: bbd03ef6da3a115852eaf24c8a1c46aeb39aa175
   subpackages:
   - jsonpb
   - proto
   - ptypes
   - ptypes/any
   - ptypes/duration
+  - ptypes/struct
   - ptypes/timestamp
   - ptypes/wrappers
 - name: github.com/hashicorp/errwrap
@@ -63,7 +64,7 @@ imports:
   - matchers/support/goraph/util
   - types
 - name: github.com/prometheus/client_golang
-  version: 967789050ba94deca04a5e84cce8ad472ce313c1
+  version: e69720d204a4aa3b0c65dc91208645ba0a52b9cd
   subpackages:
   - prometheus
 - name: github.com/prometheus/client_model
@@ -77,8 +78,10 @@ imports:
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: f98634e408857669d61064b283c4cde240622865
+  version: 282c8707aa210456a825798969cc27edda34992a
   subpackages:
+  - internal/util
+  - nfs
   - xfs
 - name: github.com/sirupsen/logrus
   version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
@@ -100,11 +103,11 @@ imports:
   - zapcore
   - zapgrpc
 - name: golang.org/x/crypto
-  version: 9de5f2eaf759b4c4550b3db39fed2e9e5f86f45c
+  version: 49796115aa4b964c318aad4f3084fdb41e9aa067
   subpackages:
   - ssh/terminal
 - name: golang.org/x/net
-  version: 66aacef3dd8a676686c7ae3716979581e8b03c47
+  version: cbe0f9307d0156177f9dd5dc85da1a31abc5f2fb
   subpackages:
   - context
   - html
@@ -117,12 +120,12 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: 7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce
+  version: 37707fdb30a5b38865cfb95e5aab41707daec7fd
   subpackages:
   - unix
   - windows
 - name: golang.org/x/text
-  version: 4ee4af566555f5fbe026368b75596286a312663a
+  version: 9e2b64d659da1afe07ce1c9c1dfefc09d188f21e
   subpackages:
   - encoding
   - encoding/charmap
@@ -151,12 +154,16 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 5b3c4e850e90a4cf6a20ebd46c8b32a0a3afcb9e
+  version: 12da02619462d233b63694c45e28fa98876d387d
   subpackages:
   - balancer
+  - balancer/base
+  - balancer/roundrobin
   - codes
   - connectivity
   - credentials
+  - encoding
+  - encoding/proto
   - grpclb/grpc_lb_v1/messages
   - grpclog
   - internal
@@ -165,12 +172,14 @@ imports:
   - naming
   - peer
   - resolver
+  - resolver/dns
+  - resolver/passthrough
   - stats
   - status
   - tap
   - transport
 - name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+  version: d670f9405373e636a5a2765eea47fac0c9bc91a4
 - name: istio.io/api
   version: 24209c4d7c9713900ac7571dfc38dd2eeea3f167
   repo: git@github.com:istio/api.git
@@ -185,7 +194,7 @@ imports:
   subpackages:
   - googleapis/google/rpc
 - name: istio.io/istio
-  version: 854dde675a05cdd60f92c08153c1de8e193e0847
+  version: f2a997272f373177053764152defcfd605ce98e0
   repo: git@github.com:spikecurtis/istio.git
   subpackages:
   - pilot/pkg/model
