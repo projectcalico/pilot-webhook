@@ -5,8 +5,8 @@ import:
 - package: github.com/emicklei/go-restful
   version: ~2.6.0
 - package: istio.io/istio
-  version: unmarshal-networkfilter
-  repo: git@github.com:spikecurtis/istio.git
+  version: c87983aeaf12e429684aa0b59cf1d891e6440c0d
+  repo: git@github.com:istio/istio.git
   subpackages:
   - pilot/pkg/proxy/envoy
 - package: istio.io/api

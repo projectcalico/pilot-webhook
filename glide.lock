@@ -1,5 +1,5 @@
-hash: b2deb2cc2f74c78c928a8e58271575eb9d82db26efcc01c71c0a79694616f6c6
-updated: 2018-02-22T12:17:49.418774541-08:00
+hash: 38158c9e09523419f7c1aa75838df843a92e010cd6a0393f8c41f92bdd876ec8
+updated: 2018-02-22T14:07:19.875203857-08:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -120,7 +120,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: 37707fdb30a5b38865cfb95e5aab41707daec7fd
+  version: c1138c84af3a9927aee1a1b8b7ce06c9b7ea52bc
   subpackages:
   - unix
   - windows
@@ -154,7 +154,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 12da02619462d233b63694c45e28fa98876d387d
+  version: 2759199bf709024f81c25e6ad1ea2b0abc4d04bf
   subpackages:
   - balancer
   - balancer/base
@@ -194,8 +194,8 @@ imports:
   subpackages:
   - googleapis/google/rpc
 - name: istio.io/istio
-  version: f2a997272f373177053764152defcfd605ce98e0
-  repo: git@github.com:spikecurtis/istio.git
+  version: c87983aeaf12e429684aa0b59cf1d891e6440c0d
+  repo: git@github.com:istio/istio.git
   subpackages:
   - pilot/pkg/model
   - pilot/pkg/model/test
