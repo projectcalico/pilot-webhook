@@ -201,6 +201,7 @@ func updateListener(listener *v1.Listener, ip string) {
 		return
 	} else if direction == VIRTUAL {
 		log.Debug("Skipping virtual listener")
+		return
 	}
 	switch proto {
 	case HTTP:
