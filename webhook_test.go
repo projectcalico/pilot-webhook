@@ -175,6 +175,7 @@ func TestUpdateListenersTCP(t *testing.T) {
 func TestClustersMainline(t *testing.T) {
 	RegisterTestingT(t)
 
+	configOptions.SetCluster = true
 	cdsReq := cdsResponse{Clusters: []*v1.Cluster{
 		{
 			Name: "out.something.com|http",
@@ -191,6 +192,28 @@ func TestClustersMainline(t *testing.T) {
 	Expect(err).To(BeNil())
 	Expect(len(cdsResp.Clusters)).To(Equal(len(cdsReq.Clusters) + 1))
 	Expect(cdsResp.Clusters[1].Name).To(Equal(AuthZClusterName))
+}
+
+func TestClustersMainlineNoChange(t *testing.T) {
+	RegisterTestingT(t)
+
+	configOptions.SetCluster = false
+	cdsReq := cdsResponse{Clusters: []*v1.Cluster{
+		{
+			Name: "out.something.com|http",
+		},
+	}}
+	cdsBytes, err := json.Marshal(cdsReq)
+	Expect(err).To(BeNil())
+	req := newCDSRequest("sidecar", bytes.NewReader(cdsBytes))
+	recorder := httptest.NewRecorder()
+	resp := restful.NewResponse(recorder)
+	clusters(req, resp)
+	var cdsResp cdsResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &cdsResp)
+	Expect(err).To(BeNil())
+	Expect(len(cdsResp.Clusters)).To(Equal(len(cdsReq.Clusters)))
+	Expect(cdsResp.Clusters[0].Name).To(Equal("out.something.com|http"))
 }
 
 func TestClustersBadReq(t *testing.T) {

@@ -37,13 +37,14 @@ Usage:
 
 Options:
   <path>                 Absolute path to webhook listen socket
-  --debug                Log at Debug level.`
+  --debug                Log at Debug level.
+  --sendcluster          Send cluster information.`
 
 const version = "0.1"
 
 const serviceNodeSeparator = "~"
 const listenerNameSeparator = "_"
-const AuthZFilterName = "ext_authz"
+const AuthZFilterName = "envoy.ext_authz"
 const AuthZClusterName = "calico.dikastes"
 const DikastesSocketDir = "/var/run/dikastes"
 
@@ -80,6 +81,12 @@ type GrpcClusterConfig struct {
 	// TODO: (spikecurtis) include Duration once we move to v2 API.
 }
 
+type options struct {
+	SetCluster bool
+}
+
+var configOptions options
+
 func (*AuthzFilterConfig) IsNetworkFilterConfig() {}
 
 func main() {
@@ -90,6 +97,10 @@ func main() {
 	}
 	if arguments["--debug"].(bool) {
 		log.SetLevel(log.DebugLevel)
+	}
+
+	if arguments["--sendcluster"].(bool) {
+		configOptions.SetCluster = true
 	}
 
 	ws := newWebhook()
@@ -183,7 +194,7 @@ func listeners(req *restful.Request, resp *restful.Response) {
 	}
 	out, err := json.Marshal(lds)
 	if err != nil {
-		log.Error("failed to re-encode")
+		log.WithField("err", err).Error("failed to re-encode")
 		resp.WriteErrorString(http.StatusInternalServerError, "internal error")
 		return
 	}
@@ -272,6 +283,10 @@ func updateTCPListener(listener *v1.Listener) {
 
 // clusters handles the CDS hook and inserts the dikastes cluster
 func clusters(req *restful.Request, resp *restful.Response) {
+	// TODO(saumoh): when we don't change the cluster body (configOptions.SetCluster == false)
+	// we should just do a io.Copy(resp, req.Request.Body)
+	// but that results in Envoy rejecting the configuration.
+	// Hence, read, deconstruct, no-op, write to output!
 	body, err := ioutil.ReadAll(req.Request.Body)
 	if err != nil {
 		log.Error("failed to read")
@@ -280,27 +295,29 @@ func clusters(req *restful.Request, resp *restful.Response) {
 	var cds cdsResponse
 	err = json.Unmarshal(body, &cds)
 	if err != nil {
-		log.Error("failed to decode JSON")
+		log.WithField("err", err).Error("failed to decode JSON")
 		resp.WriteErrorString(http.StatusBadRequest, "could not parse request JSON")
 		return
 	}
-	cds.Clusters = append(cds.Clusters, &v1.Cluster{
-		Name:             AuthZClusterName,
-		ConnectTimeoutMs: 5000,
-		Type:             v1.ClusterTypeStatic,
-		CircuitBreaker: &v1.CircuitBreaker{
-			Default: v1.DefaultCBPriority{
-				MaxPendingRequests: 10000,
-				MaxRequests:        10000,
+	if configOptions.SetCluster {
+		cds.Clusters = append(cds.Clusters, &v1.Cluster{
+			Name:             AuthZClusterName,
+			ConnectTimeoutMs: 5000,
+			Type:             v1.ClusterTypeStatic,
+			CircuitBreaker: &v1.CircuitBreaker{
+				Default: v1.DefaultCBPriority{
+					MaxPendingRequests: 10000,
+					MaxRequests:        10000,
+				},
 			},
-		},
-		LbType:   v1.LbTypeRoundRobin,
-		Features: v1.ClusterFeatureHTTP2,
-		Hosts:    []v1.Host{{URL: "unix://" + DikastesSocketDir + "/dikastes.sock"}},
-	})
+			LbType:   v1.LbTypeRoundRobin,
+			Features: v1.ClusterFeatureHTTP2,
+			Hosts:    []v1.Host{{URL: "unix://" + DikastesSocketDir + "/dikastes.sock"}},
+		})
+	}
 	out, err := json.Marshal(cds)
 	if err != nil {
-		log.Error("failed to re-encode")
+		log.WithField("err", err).Error("failed to re-encode")
 		return
 	}
 	resp.Write(out)
