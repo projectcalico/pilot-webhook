@@ -43,7 +43,7 @@ const version = "0.1"
 
 const serviceNodeSeparator = "~"
 const listenerNameSeparator = "_"
-const AuthZFilterName = "ext_authz"
+const AuthZFilterName = "envoy.ext_authz"
 const AuthZClusterName = "calico.dikastes"
 const DikastesSocketDir = "/var/run/dikastes"
 
@@ -183,7 +183,7 @@ func listeners(req *restful.Request, resp *restful.Response) {
 	}
 	out, err := json.Marshal(lds)
 	if err != nil {
-		log.Error("failed to re-encode")
+		log.WithField("err", err).Error("failed to re-encode")
 		resp.WriteErrorString(http.StatusInternalServerError, "internal error")
 		return
 	}
@@ -270,48 +270,33 @@ func updateTCPListener(listener *v1.Listener) {
 	return
 }
 
-// clusters handles the CDS hook and inserts the dikastes cluster
+// clusters handles the CDS hook and is a passthru
 func clusters(req *restful.Request, resp *restful.Response) {
-	body, err := ioutil.ReadAll(req.Request.Body)
-	if err != nil {
-		log.Error("failed to read")
-		return
-	}
-	var cds cdsResponse
-	err = json.Unmarshal(body, &cds)
-	if err != nil {
-		log.Error("failed to decode JSON")
-		resp.WriteErrorString(http.StatusBadRequest, "could not parse request JSON")
-		return
-	}
-	cds.Clusters = append(cds.Clusters, &v1.Cluster{
-		Name:             AuthZClusterName,
-		ConnectTimeoutMs: 5000,
-		Type:             v1.ClusterTypeStatic,
-		CircuitBreaker: &v1.CircuitBreaker{
-			Default: v1.DefaultCBPriority{
-				MaxPendingRequests: 10000,
-				MaxRequests:        10000,
-			},
-		},
-		LbType:   v1.LbTypeRoundRobin,
-		Features: v1.ClusterFeatureHTTP2,
-		Hosts:    []v1.Host{{URL: "unix://" + DikastesSocketDir + "/dikastes.sock"}},
-	})
-	out, err := json.Marshal(cds)
-	if err != nil {
-		log.Error("failed to re-encode")
-		return
-	}
-	resp.Write(out)
+	copyRequestToResponse(resp, req)
 }
 
 // routes handles the RDS hook and is a passthru
 func routes(req *restful.Request, resp *restful.Response) {
-	io.Copy(resp, req.Request.Body)
+	copyRequestToResponse(resp, req)
 }
 
 // endpoints handles the EDS hook and is a passthru
 func endpoints(req *restful.Request, resp *restful.Response) {
-	io.Copy(resp, req.Request.Body)
+	copyRequestToResponse(resp, req)
+}
+
+func copyRequestToResponse(resp *restful.Response, req *restful.Request) {
+	body, err := ioutil.ReadAll(req.Request.Body)
+	if err != nil {
+		log.WithField("err", err).Error("failed to read body")
+		resp.WriteErrorString(http.StatusBadRequest, "Could not read request body")
+		return
+	}
+	_, err = resp.Write(body)
+	if err != nil {
+		log.WithField("err", err).Error("Failed to write response")
+		resp.WriteErrorString(http.StatusBadRequest, "Could not write response")
+		return
+	}
+
 }
