@@ -15,7 +15,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -290,13 +289,13 @@ func copyRequestToResponse(resp *restful.Response, req *restful.Request) {
 	body, err := ioutil.ReadAll(req.Request.Body)
 	if err != nil {
 		log.WithField("err", err).Error("failed to read body")
-		resp.WriteErrorString(http.StatusBadRequest, "Could not read cluster body")
+		resp.WriteErrorString(http.StatusBadRequest, "Could not read request body")
 		return
 	}
-	_, err = io.Copy(resp, bytes.NewReader(body))
+	_, err = resp.Write(body)
 	if err != nil {
-		log.WithField("err", err).Error("Failed to do io copy")
-		resp.WriteErrorString(http.StatusBadRequest, "Could not read cluster body")
+		log.WithField("err", err).Error("Failed to write response")
+		resp.WriteErrorString(http.StatusBadRequest, "Could not write response")
 		return
 	}
 
