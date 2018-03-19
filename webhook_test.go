@@ -172,58 +172,16 @@ func TestUpdateListenersTCP(t *testing.T) {
 	Expect(l.Filters[0].Name).To(Equal(AuthZFilterName))
 }
 
-func TestClustersMainline(t *testing.T) {
+func TestClusterPassthru(t *testing.T) {
 	RegisterTestingT(t)
 
-	configOptions.SetCluster = true
-	cdsReq := cdsResponse{Clusters: []*v1.Cluster{
-		{
-			Name: "out.something.com|http",
-		},
-	}}
-	cdsBytes, err := json.Marshal(cdsReq)
-	Expect(err).To(BeNil())
-	req := newCDSRequest("sidecar", bytes.NewReader(cdsBytes))
-	recorder := httptest.NewRecorder()
-	resp := restful.NewResponse(recorder)
+	body := "testing CDS"
+	req := newCDSRequest("sidecar", strings.NewReader(body))
+	rec := httptest.NewRecorder()
+	resp := restful.NewResponse(rec)
 	clusters(req, resp)
-	var cdsResp cdsResponse
-	err = json.Unmarshal(recorder.Body.Bytes(), &cdsResp)
-	Expect(err).To(BeNil())
-	Expect(len(cdsResp.Clusters)).To(Equal(len(cdsReq.Clusters) + 1))
-	Expect(cdsResp.Clusters[1].Name).To(Equal(AuthZClusterName))
-}
-
-func TestClustersMainlineNoChange(t *testing.T) {
-	RegisterTestingT(t)
-
-	configOptions.SetCluster = false
-	cdsReq := cdsResponse{Clusters: []*v1.Cluster{
-		{
-			Name: "out.something.com|http",
-		},
-	}}
-	cdsBytes, err := json.Marshal(cdsReq)
-	Expect(err).To(BeNil())
-	req := newCDSRequest("sidecar", bytes.NewReader(cdsBytes))
-	recorder := httptest.NewRecorder()
-	resp := restful.NewResponse(recorder)
-	clusters(req, resp)
-	var cdsResp cdsResponse
-	err = json.Unmarshal(recorder.Body.Bytes(), &cdsResp)
-	Expect(err).To(BeNil())
-	Expect(len(cdsResp.Clusters)).To(Equal(len(cdsReq.Clusters)))
-	Expect(cdsResp.Clusters[0].Name).To(Equal("out.something.com|http"))
-}
-
-func TestClustersBadReq(t *testing.T) {
-	RegisterTestingT(t)
-
-	req := newCDSRequest("sidecar", strings.NewReader("not JSON"))
-	recorder := httptest.NewRecorder()
-	resp := restful.NewResponse(recorder)
-	clusters(req, resp)
-	Expect(recorder.Code).To(Equal(http.StatusBadRequest))
+	Expect(rec.Code).To(Equal(http.StatusOK))
+	Expect(rec.Body.String()).To(Equal(body))
 }
 
 func TestRoutesPassthru(t *testing.T) {

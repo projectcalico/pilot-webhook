@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -37,8 +38,7 @@ Usage:
 
 Options:
   <path>                 Absolute path to webhook listen socket
-  --debug                Log at Debug level.
-  --sendcluster          Send cluster information.`
+  --debug                Log at Debug level.`
 
 const version = "0.1"
 
@@ -81,12 +81,6 @@ type GrpcClusterConfig struct {
 	// TODO: (spikecurtis) include Duration once we move to v2 API.
 }
 
-type options struct {
-	SetCluster bool
-}
-
-var configOptions options
-
 func (*AuthzFilterConfig) IsNetworkFilterConfig() {}
 
 func main() {
@@ -97,10 +91,6 @@ func main() {
 	}
 	if arguments["--debug"].(bool) {
 		log.SetLevel(log.DebugLevel)
-	}
-
-	if arguments["--sendcluster"].(bool) {
-		configOptions.SetCluster = true
 	}
 
 	ws := newWebhook()
@@ -281,54 +271,33 @@ func updateTCPListener(listener *v1.Listener) {
 	return
 }
 
-// clusters handles the CDS hook and inserts the dikastes cluster
+// clusters handles the CDS hook and is a passthru
 func clusters(req *restful.Request, resp *restful.Response) {
-	// TODO(saumoh): when we don't change the cluster body (configOptions.SetCluster == false)
-	// we should just do a io.Copy(resp, req.Request.Body)
-	// but that results in Envoy rejecting the configuration.
-	// Hence, read, deconstruct, no-op, write to output!
-	body, err := ioutil.ReadAll(req.Request.Body)
-	if err != nil {
-		log.Error("failed to read")
-		return
-	}
-	var cds cdsResponse
-	err = json.Unmarshal(body, &cds)
-	if err != nil {
-		log.WithField("err", err).Error("failed to decode JSON")
-		resp.WriteErrorString(http.StatusBadRequest, "could not parse request JSON")
-		return
-	}
-	if configOptions.SetCluster {
-		cds.Clusters = append(cds.Clusters, &v1.Cluster{
-			Name:             AuthZClusterName,
-			ConnectTimeoutMs: 5000,
-			Type:             v1.ClusterTypeStatic,
-			CircuitBreaker: &v1.CircuitBreaker{
-				Default: v1.DefaultCBPriority{
-					MaxPendingRequests: 10000,
-					MaxRequests:        10000,
-				},
-			},
-			LbType:   v1.LbTypeRoundRobin,
-			Features: v1.ClusterFeatureHTTP2,
-			Hosts:    []v1.Host{{URL: "unix://" + DikastesSocketDir + "/dikastes.sock"}},
-		})
-	}
-	out, err := json.Marshal(cds)
-	if err != nil {
-		log.WithField("err", err).Error("failed to re-encode")
-		return
-	}
-	resp.Write(out)
+	copyRequestToResponse(resp, req)
 }
 
 // routes handles the RDS hook and is a passthru
 func routes(req *restful.Request, resp *restful.Response) {
-	io.Copy(resp, req.Request.Body)
+	copyRequestToResponse(resp, req)
 }
 
 // endpoints handles the EDS hook and is a passthru
 func endpoints(req *restful.Request, resp *restful.Response) {
-	io.Copy(resp, req.Request.Body)
+	copyRequestToResponse(resp, req)
+}
+
+func copyRequestToResponse(resp *restful.Response, req *restful.Request) {
+	body, err := ioutil.ReadAll(req.Request.Body)
+	if err != nil {
+		log.WithField("err", err).Error("failed to read body")
+		resp.WriteErrorString(http.StatusBadRequest, "Could not read cluster body")
+		return
+	}
+	_, err = io.Copy(resp, bytes.NewReader(body))
+	if err != nil {
+		log.WithField("err", err).Error("Failed to do io copy")
+		resp.WriteErrorString(http.StatusBadRequest, "Could not read cluster body")
+		return
+	}
+
 }
